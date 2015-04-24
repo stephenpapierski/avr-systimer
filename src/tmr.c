@@ -3,7 +3,7 @@
  * @file    tmr.c
  * @author  Stephen Papierski <stephenpapierski@gmail.com>
  * @date    2015-04-20 20:47:09
- * @edited  2015-04-21 01:04:13
+ * @edited  2015-04-22 13:44:32
  */
 
 #include <avr/io.h>
@@ -48,7 +48,7 @@ uint8_t next_timer;
 /******************************************************************************/
 
 void update_sec(uint8_t index){
-    if (msec[index] == 1000){
+    if (msec[index] > 999){
         msec[index] = 0;
         sec[index]++;
     }
@@ -56,21 +56,21 @@ void update_sec(uint8_t index){
 }
 
 void update_min(uint8_t index){
-    if (sec[index] == 60){
+    if (sec[index] > 59){
         sec[index] = 0;
         min[index]++;
     }
 }
 
 void update_hour(uint8_t index){
-    if (min[index] == 60){
+    if (min[index] > 59){
         min[index] = 0;
         hour[index]++;
     }
 }
 
 void update_day(uint8_t index){
-    if (hour[index] == 24){
+    if (hour[index] > 23){
         hour[index] = 0;
         day[index]++;
     }

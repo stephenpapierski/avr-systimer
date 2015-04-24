@@ -3,7 +3,7 @@
  * @file    tmr.h
  * @author  Stephen Papierski <stephenpapierski@gmail.com>
  * @date    2015-04-20 20:47:14
- * @edited  2015-04-21 01:03:53
+ * @edited  2015-04-24 14:35:29
  */
 
 #ifndef TMR_H
@@ -17,6 +17,9 @@
 #define COUNTER_NAME_MAX_LENGTH 16
 //comment out if you don't want a system counter that counts msec:sec:min:hour:day
 #define __SYS_COUNTER__
+
+//TODO idea use typedef enum to create timer names
+//as well as structs to hold an entire timer
 
 typedef COUNTER_INT_TYPE counter_int;
 

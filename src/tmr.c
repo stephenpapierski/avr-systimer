@@ -3,7 +3,7 @@
  * @file    tmr.c
  * @author  Stephen Papierski <stephenpapierski@gmail.com>
  * @date    2015-04-20 20:47:09
- * @edited  2015-04-22 13:44:32
+ * @edited  2015-04-25 01:36:50
  */
 
 #include <avr/io.h>
@@ -23,73 +23,153 @@
 /* Declarations                                                               */
 /******************************************************************************/
 
-#if defined (__SYS_COUNTER__)
-#define NUM_COUNTERS    NUM_USER_COUNTERS + 1
-#else
-#define NUM_COUNTERS    NUM_USER_COUNTERS
-#endif
+//These keep track of what timers have been initialized
+sysTimer8_t *timers8[MAX_8_TIMERS];
+sysTimer16_t *timers16[MAX_16_TIMERS];
+sysTimer32_t *timers32[MAX_32_TIMERS];
 
-char names[NUM_COUNTERS][COUNTER_NAME_MAX_LENGTH + 1];
-EResolution resolutions[NUM_COUNTERS];
-bool in_use[NUM_COUNTERS];
-
-counter_int *counters;
-counter_int msec[NUM_COUNTERS];
-counter_int sec[NUM_COUNTERS];
-counter_int min[NUM_COUNTERS];
-counter_int hour[NUM_COUNTERS];
-counter_int day[NUM_COUNTERS];
-
-//next available timer
-uint8_t next_timer;
+//keeps track of next available timer slot
+uint8_t next_timer8;
+uint8_t next_timer16;
+uint8_t next_timer32;
 
 /******************************************************************************/
 /* Local Utilities                                                            */
 /******************************************************************************/
 
-void update_sec(uint8_t index){
-    if (msec[index] > 999){
-        msec[index] = 0;
-        sec[index]++;
-    }
+/* 8 bit timer utils */
 
-}
-
-void update_min(uint8_t index){
-    if (sec[index] > 59){
-        sec[index] = 0;
-        min[index]++;
-    }
-}
-
-void update_hour(uint8_t index){
-    if (min[index] > 59){
-        min[index] = 0;
-        hour[index]++;
-    }
-}
-
-void update_day(uint8_t index){
-    if (hour[index] > 23){
-        hour[index] = 0;
-        day[index]++;
-    }
-}
-
-int8_t get_timer_index(char *timer_name){
-    int8_t i = -1;
-    for (i = 0; i < NUM_COUNTERS; i++){
-        if (strcmp(names[i],timer_name) == 0){
-            break;
+void update_timers8(void){
+    uint8_t i;
+    for (i = 0; i < MAX_8_TIMERS; i++){
+        if (timers8[i] -> active){
+            timers8[i] -> msec++;
         }
     }
-    return i;
+}
+
+/* 16 bit timer utils */
+
+void update_sec16(uint16_t index){
+    if ((timers16[index] -> msec) > 999){
+        (timers16[index] -> msec) = 0;
+      timers16[index] -> sec++;
+    }
+}
+
+void update_min16(uint16_t index){
+    update_sec16(index);
+    if ((timers16[index] -> sec) > 59){
+        (timers16[index] -> sec) = 0;
+        timers16[index] -> min++;
+    }
+}
+
+void update_hour16(uint16_t index){
+    update_min16(index);
+    if ((timers16[index] -> min) > 59){
+        (timers16[index] -> min) = 0;
+        timers16[index] -> hour++;
+    }
+}
+
+void update_day16(uint16_t index){
+    update_hour16(index);
+    if ((timers16[index] -> hour) > 23){
+        (timers16[index] -> hour) = 0;
+        timers16[index] -> day++;
+    }
+}
+
+void update_timers16(void){
+    uint16_t i;
+    for (i = 0; i < MAX_16_TIMERS; i++){
+        if ((timers16[i] -> timer_scale) != 0){
+            timers16[i] -> msec++;
+            switch (timers16[i] -> timer_scale){
+                case MSEC:
+                    break;
+                case SEC:
+                    update_sec16(i);
+                    break;
+                case MIN:
+                    update_min16(i);
+                    break;
+                case HOUR:
+                    update_hour16(i);
+                    break;
+                case DAY:
+                    update_day16(i);
+                    break;
+            }
+        }
+    }
+}
+
+
+/* 32 bit timer utils */
+
+void update_sec32(uint32_t index){
+    if ((timers32[index] -> msec) > 999){
+        (timers32[index] -> msec) = 0;
+      timers32[index] -> sec++;
+    }
+}
+
+void update_min32(uint32_t index){
+    update_sec32(index);
+    if ((timers32[index] -> sec) > 59){
+        (timers32[index] -> sec) = 0;
+        timers32[index] -> min++;
+    }
+}
+
+void update_hour32(uint32_t index){
+    update_min32(index);
+    if ((timers32[index] -> min) > 59){
+        (timers32[index] -> min) = 0;
+        timers32[index] -> hour++;
+    }
+}
+
+void update_day32(uint32_t index){
+    update_hour32(index);
+    if ((timers32[index] -> hour) > 23){
+        (timers32[index] -> hour) = 0;
+        timers32[index] -> day++;
+    }
+}
+
+void update_timers32(void){
+    uint32_t i;
+    for (i = 0; i < MAX_32_TIMERS; i++){
+        if ((timers32[i] -> timer_scale) != 0){
+            timers32[i] -> msec++;
+            switch (timers32[i] -> timer_scale){
+                case MSEC:
+                    break;
+                case SEC:
+                    update_sec32(i);
+                    break;
+                case MIN:
+                    update_min32(i);
+                    break;
+                case HOUR:
+                    update_hour32(i);
+                    break;
+                case DAY:
+                    update_day32(i);
+                    break;
+            }
+        }
+    }
 }
 
 /******************************************************************************/
 /* Library Functions                                                          */
 /******************************************************************************/
-void tmr_init(void){
+
+void sysT_init(void){
     //hardware setup
 #if defined (__AVR_ATtiny85__)
     TCCR0A = 1<<WGM01;  //sets Timer0 to CTC mode
@@ -102,148 +182,119 @@ void tmr_init(void){
     OCR0A = 250;        //set Timer0 to CompA every 1ms
     TIMSK0 = 1<<OCIE0A;  //enables Timer0 Compare A Interrupt
 #elif defined (__AVR_ATmega1284P__)
-    //insert timer regs for 1284p_available
-#endif
-#if defined (__SYS_COUNTER__)
-    tmr_new_counter("sys_counter",ALL);
+    //insert timer regs for 1284p
 #endif
 }
 
-int tmr_new_counter(char *timer_name, EResolution resolution){
-    //TODO prevent 2 timers with same name
-    //TODO return -1 if name already used, or no timer remaining, or name too long
-    strcpy(names[next_timer], timer_name);
-    resolutions[next_timer] = resolution;
-    in_use[next_timer] = true;
-    switch (resolution){
-        case MSEC:
-            counters[next_timer] = msec[next_timer];
-            break;
-        case SEC:
-            counters[next_timer] = sec[next_timer];
-            break;
-        case MIN:
-            counters[next_timer] = min[next_timer];
-            break;
-        case HOUR:
-            counters[next_timer] = hour[next_timer];
-            break;
-        case DAY:
-            counters[next_timer] = day[next_timer];
-            break;
-        case ALL:
-            //TODO
-            //nothing for now
-            break;
-    }
-    next_timer++;
-    return 1;
+void sysT_8_init(sysTimer8_t *timer){
+    timers8[next_timer8] = timer;
+    next_timer8++;
 }
 
-counter_int tmr_get_count(char *timer_name){
-    int8_t timer_index = get_timer_index(timer_name);
-    if (timer_index != -1){
-        return counters[timer_index];
-    }else{
-        return -1;
-    }
+void sysT_16_init(sysTimer16_t *timer, sysT_scale scale){
+    timers16[next_timer16] = timer;
+    next_timer16++;
+    timer -> timer_scale = scale;
 }
 
-counter_int tmr_get_msec(char *timer_name){
-    int8_t timer_index = get_timer_index(timer_name);
-    if (timer_index != -1){
-        return msec[timer_index];
-    }else{
-        return -1;
-    }
+void sysT_32_init(sysTimer32_t *timer, sysT_scale scale){
+    timers32[next_timer32] = timer;
+    next_timer32++;
+    timer -> timer_scale = scale;
 }
 
-counter_int tmr_get_sec(char *timer_name){
-    int8_t timer_index = get_timer_index(timer_name);
-    if (timer_index != -1){
-        return sec[timer_index];
-    }else{
-        return -1;
-    }
+void sysT_16_reset(sysTimer16_t *timer){
+    (timer -> msec) = 0;
+    (timer -> sec) = 0;
+    (timer -> min) = 0;
+    (timer -> hour) = 0;
+    (timer -> day) = 0;
 }
 
-counter_int tmr_get_min(char *timer_name){
-    int8_t timer_index = get_timer_index(timer_name);
-    if (timer_index != -1){
-        return min[timer_index];
-    }else{
-        return -1;
-    }
-}
+//counter_int tmr_get_count(char *timer_name){
+//    int8_t timer_index = get_timer_index(timer_name);
+//    if (timer_index != -1){
+//        return counters[timer_index];
+//    }else{
+//        return -1;
+//    }
+//}
+//
+//counter_int tmr_get_msec(char *timer_name){
+//    int8_t timer_index = get_timer_index(timer_name);
+//    if (timer_index != -1){
+//        return msec[timer_index];
+//    }else{
+//        return -1;
+//    }
+//}
+//
+//counter_int tmr_get_sec(char *timer_name){
+//    int8_t timer_index = get_timer_index(timer_name);
+//    if (timer_index != -1){
+//        return sec[timer_index];
+//    }else{
+//        return -1;
+//    }
+//}
+//
+//counter_int tmr_get_min(char *timer_name){
+//    int8_t timer_index = get_timer_index(timer_name);
+//    if (timer_index != -1){
+//        return min[timer_index];
+//    }else{
+//        return -1;
+//    }
+//}
+//
+//counter_int tmr_get_hour(char *timer_name){
+//    int8_t timer_index = get_timer_index(timer_name);
+//    if (timer_index != -1){
+//        return hour[timer_index];
+//    }else{
+//        return -1;
+//    }
+//}
+//
+//counter_int tmr_get_day(char *timer_name){
+//    int8_t timer_index = get_timer_index(timer_name);
+//    if (timer_index != -1){
+//        return day[timer_index];
+//    }else{
+//        return -1;
+//    }
+//}
+//
+//void tmr_clear(char *timer_name){
+//    int8_t timer_index = get_timer_index(timer_name);
+//    if (timer_index != -1){
+//        cli();
+//        msec[timer_index] = 0;
+//        sec[timer_index] = 0;
+//        min[timer_index] = 0;
+//        hour[timer_index] = 0;
+//        day[timer_index] = 0;
+//        sei();
+//    }
+//}
+///*TODO timer reset
+// * protect everything with cli(), sei()
+// */
+//
+///*TODO maybe just have a function that the user places in a 1 ms ISR
+// * instead of using an entire timer
+// */
+//
 
-counter_int tmr_get_hour(char *timer_name){
-    int8_t timer_index = get_timer_index(timer_name);
-    if (timer_index != -1){
-        return hour[timer_index];
-    }else{
-        return -1;
-    }
-}
 
-counter_int tmr_get_day(char *timer_name){
-    int8_t timer_index = get_timer_index(timer_name);
-    if (timer_index != -1){
-        return day[timer_index];
-    }else{
-        return -1;
-    }
+void sysT_timer_service(void){
+    update_timers8();
+    update_timers16();
+    update_timers32();
 }
-
-void tmr_clear(char *timer_name){
-    int8_t timer_index = get_timer_index(timer_name);
-    if (timer_index != -1){
-        cli();
-        msec[timer_index] = 0;
-        sec[timer_index] = 0;
-        min[timer_index] = 0;
-        hour[timer_index] = 0;
-        day[timer_index] = 0;
-        sei();
-    }
-}
-/*TODO timer reset
- * protect everything with cli(), sei()
- */
-
-/*TODO maybe just have a function that the user places in a 1 ms ISR
- * instead of using an entire timer
- */
 
 ISR(TIMER0_COMPA_vect){
-    unsigned char i;
-    for (i = 0; i < NUM_COUNTERS; i++){
-        if (in_use[i] == true){
-            //increment base timer
-            msec[i]++;
-            switch (resolutions[i]){
-                case MSEC:
-                    //nothing
-                    break;
-                case SEC:
-                    update_sec(i);
-                    break;
-                case MIN:
-                    update_sec(i);
-                    update_min(i);
-                    break;
-                case HOUR:
-                    update_sec(i);
-                    update_min(i);
-                    update_hour(i);
-                    break;
-                case DAY:
-                case ALL:
-                    update_sec(i);
-                    update_min(i);
-                    update_hour(i);
-                    update_day(i);
-                    break;
-            }
-        }
-    }
+    //PORTB |= 1<<PB5;
+    sysT_timer_service();
+    //PORTB &= ~(1<<PB5);
 }

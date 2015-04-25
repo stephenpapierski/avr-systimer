@@ -3,7 +3,7 @@
  * @file    tmr.c
  * @author  Stephen Papierski <stephenpapierski@gmail.com>
  * @date    2015-04-20 20:47:09
- * @edited  2015-04-25 01:36:50
+ * @edited  2015-04-25 15:19:41
  */
 
 #include <avr/io.h>
@@ -50,14 +50,14 @@ void update_timers8(void){
 
 /* 16 bit timer utils */
 
-void update_sec16(uint16_t index){
+void update_sec16(uint8_t index){
     if ((timers16[index] -> msec) > 999){
-        (timers16[index] -> msec) = 0;
-      timers16[index] -> sec++;
+        timers16[index] -> msec = 0;
+        timers16[index] -> sec++;
     }
 }
 
-void update_min16(uint16_t index){
+void update_min16(uint8_t index){
     update_sec16(index);
     if ((timers16[index] -> sec) > 59){
         (timers16[index] -> sec) = 0;
@@ -65,7 +65,7 @@ void update_min16(uint16_t index){
     }
 }
 
-void update_hour16(uint16_t index){
+void update_hour16(uint8_t index){
     update_min16(index);
     if ((timers16[index] -> min) > 59){
         (timers16[index] -> min) = 0;
@@ -73,7 +73,7 @@ void update_hour16(uint16_t index){
     }
 }
 
-void update_day16(uint16_t index){
+void update_day16(uint8_t index){
     update_hour16(index);
     if ((timers16[index] -> hour) > 23){
         (timers16[index] -> hour) = 0;
@@ -82,7 +82,7 @@ void update_day16(uint16_t index){
 }
 
 void update_timers16(void){
-    uint16_t i;
+    uint8_t i;
     for (i = 0; i < MAX_16_TIMERS; i++){
         if ((timers16[i] -> timer_scale) != 0){
             timers16[i] -> msec++;
@@ -109,14 +109,14 @@ void update_timers16(void){
 
 /* 32 bit timer utils */
 
-void update_sec32(uint32_t index){
+void update_sec32(uint8_t index){
     if ((timers32[index] -> msec) > 999){
         (timers32[index] -> msec) = 0;
       timers32[index] -> sec++;
     }
 }
 
-void update_min32(uint32_t index){
+void update_min32(uint8_t index){
     update_sec32(index);
     if ((timers32[index] -> sec) > 59){
         (timers32[index] -> sec) = 0;
@@ -124,7 +124,7 @@ void update_min32(uint32_t index){
     }
 }
 
-void update_hour32(uint32_t index){
+void update_hour32(uint8_t index){
     update_min32(index);
     if ((timers32[index] -> min) > 59){
         (timers32[index] -> min) = 0;
@@ -132,7 +132,7 @@ void update_hour32(uint32_t index){
     }
 }
 
-void update_day32(uint32_t index){
+void update_day32(uint8_t index){
     update_hour32(index);
     if ((timers32[index] -> hour) > 23){
         (timers32[index] -> hour) = 0;
@@ -141,7 +141,7 @@ void update_day32(uint32_t index){
 }
 
 void update_timers32(void){
-    uint32_t i;
+    uint8_t i;
     for (i = 0; i < MAX_32_TIMERS; i++){
         if ((timers32[i] -> timer_scale) != 0){
             timers32[i] -> msec++;
@@ -294,7 +294,9 @@ void sysT_timer_service(void){
 }
 
 ISR(TIMER0_COMPA_vect){
-    //PORTB |= 1<<PB5;
+    cli();
+    PORTB |= 1<<PB5;
     sysT_timer_service();
-    //PORTB &= ~(1<<PB5);
+    PORTB &= ~(1<<PB5);
+    sei();
 }

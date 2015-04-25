@@ -3,7 +3,7 @@
  * @file    test.c
  * @author  Stephen Papierski <stephenpapierski@gmail.com>
  * @date    2015-04-20 18:14:58
- * @edited  2015-04-25 01:40:36
+ * @edited  2015-04-25 15:18:47
  */
 
 #include <avr/io.h>
@@ -19,30 +19,33 @@
 
 
 int main(void){
-    //uart0_init(UART_BAUD_SELECT(19200,16000000L));
-    //char buffer[80];
+    uart0_init(UART_BAUD_SELECT(19200,16000000L));
+    char buffer[80];
 
-    //sysT_init();
-    //sysTimer16_t mins;
-    //sysTimer16_t print_timer;
+    sysT_init();
+    sysTimer16_t mins;
+    sysTimer16_t print_timer;
 
-    //sysT_16_init(&mins, MIN);
-    //sysT_16_init(&print_timer,MSEC);
+    sysT_16_init(&mins, MIN);
+    sysT_16_init(&print_timer,MSEC);
 
-    //sei();
+    sei();
     DDRB |= 1<<PB5;
     while(1){
-        //if (print_timer.msec > 3000){
-            //uart0_puts("working\n");
-            //unsigned char test = 0;
-            //uart0_putc('c');
-            //uint8_t i = 0;
-            //while (i++ < 200){
-        PORTB |= 1<<PB5;
-        _delay_ms(1000);
-        uart0_putc('a');
-        PORTB &= ~(1<<PB5);
-        _delay_ms(1000);
+        //if (print_timer.msec > 500){
+            sysT_16_reset(&print_timer);
+            sprintf(buffer, "%d\n", print_timer.msec);
+            uart0_puts(buffer);
+        //    //unsigned char test = 0;
+        //    //uart0_putc('c');
+        //    //uint8_t i = 0;
+        //    //while (i++ < 200){
+        //}
+        //PORTB |= 1<<PB5;
+        //_delay_ms(1000);
+        //uart0_putc('a');
+        //PORTB &= ~(1<<PB5);
+        //_delay_ms(1000);
 
 
             //}

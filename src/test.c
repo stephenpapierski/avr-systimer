@@ -3,7 +3,7 @@
  * @file    test.c
  * @author  Stephen Papierski <stephenpapierski@gmail.com>
  * @date    2015-04-20 18:14:58
- * @edited  2015-04-27 23:53:27
+ * @edited  2015-04-28 00:00:45
  */
 
 #include <avr/io.h>
@@ -24,10 +24,10 @@ int main(void){
 
     sysT_init();
     //sysTimer16_t mins;
-    sysTimer16_t print_timer;
+    sysTimer8_t print_timer;
 
-    //sysT_16_init(&mins, MIN);
-    sysT_16_init(&print_timer,MIN);
+    //sysT_8_init(&mins, MIN);
+    sysT_8_init(&print_timer);
 
     sei();
     DDRB |= 1<<PB5;
@@ -47,12 +47,12 @@ int main(void){
         if (print_timer.msec > 500){
             //sysT_16_reset(&print_timer);
         }
-            sprintf(buffer, "msec: %d ", sysT_16_get_msec(&print_timer));
+            sprintf(buffer, "msec: %d\n", sysT_8_get_msec(&print_timer));
             uart0_puts(buffer);
-            sprintf(buffer, "sec: %d ", sysT_16_get_sec(&print_timer));
-            uart0_puts(buffer);
-            sprintf(buffer, "min: %d\n", sysT_16_get_min(&print_timer));
-            uart0_puts(buffer);
+            //sprintf(buffer, "sec: %d ", sysT_8_get_sec(&print_timer));
+            //uart0_puts(buffer);
+            //sprintf(buffer, "min: %d\n", sysT_8_get_min(&print_timer));
+            //uart0_puts(buffer);
             //_delay_ms(500);
         //}
         //    //unsigned char test = 0;

@@ -3,7 +3,7 @@
  * @file    tmr.c
  * @author  Stephen Papierski <stephenpapierski@gmail.com>
  * @date    2015-04-20 20:47:09
- * @edited  2015-04-27 23:56:02
+ * @edited  2015-04-27 23:58:16
  */
 
 #include <avr/io.h>
@@ -209,6 +209,14 @@ void sysT_8_init(sysTimer8_t *timer){
 
 void sysT_8_reset(sysTimer8_t *timer){
     (timer -> msec) = 0;
+}
+
+uint8_t sysT_8_get_msec(sysTimer8_t *timer){
+    uint8_t ret;
+    cli();
+    ret = timer->msec;
+    sei();
+    return ret;
 }
 
 /* 16 bit timer functions */

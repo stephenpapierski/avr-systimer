@@ -3,7 +3,7 @@
  * @file    tmr.h
  * @author  Stephen Papierski <stephenpapierski@gmail.com>
  * @date    2015-04-20 20:47:14
- * @edited  2015-04-25 00:45:59
+ * @edited  2015-04-27 23:47:00
  */
 
 #ifndef TMR_H
@@ -31,7 +31,7 @@ typedef struct{
     uint8_t     msec;           //miliseconds counter
 } sysTimer8_t;
 
-typedef struct{
+typedef struct sysTimer16_t{
     sysT_scale  timer_scale;
     uint16_t    msec;
     uint16_t    sec;
@@ -54,9 +54,18 @@ typedef struct{
  */
 void sysT_init(void);
 
+void sysT_8_init(sysTimer8_t *timer);
 void sysT_16_init(sysTimer16_t *timer, sysT_scale scale);
+void sysT_32_init(sysTimer32_t *timer, sysT_scale scale);
 
 void sysT_16_reset(sysTimer16_t *timer);
+void sysT_32_reset(sysTimer32_t *timer);
+
+uint16_t sysT_16_get_msec(sysTimer16_t *timer);
+uint16_t sysT_16_get_sec(sysTimer16_t *timer);
+uint16_t sysT_16_get_min(sysTimer16_t *timer);
+uint16_t sysT_16_get_hour(sysTimer16_t *timer);
+uint16_t sysT_16_get_day(sysTimer16_t *timer);
 ///**
 // * @brief Create new counter
 // * @param   timer_name  Name of new counter

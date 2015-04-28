@@ -3,7 +3,7 @@
  * @file    test.c
  * @author  Stephen Papierski <stephenpapierski@gmail.com>
  * @date    2015-04-20 18:14:58
- * @edited  2015-04-25 15:18:47
+ * @edited  2015-04-27 23:53:27
  */
 
 #include <avr/io.h>
@@ -23,19 +23,38 @@ int main(void){
     char buffer[80];
 
     sysT_init();
-    sysTimer16_t mins;
+    //sysTimer16_t mins;
     sysTimer16_t print_timer;
 
-    sysT_16_init(&mins, MIN);
-    sysT_16_init(&print_timer,MSEC);
+    //sysT_16_init(&mins, MIN);
+    sysT_16_init(&print_timer,MIN);
 
     sei();
     DDRB |= 1<<PB5;
     while(1){
         //if (print_timer.msec > 500){
-            sysT_16_reset(&print_timer);
-            sprintf(buffer, "%d\n", print_timer.msec);
+            //sysT_16_reset(&print_timer);
+        //if (print_timer.msec >= 500){
+            //sysT_16_reset(&print_timer);
+
+            //sprintf(buffer, "msec: %lu ", print_timer.msec);
+            //uart0_puts(buffer);
+            //sprintf(buffer, "sec: %lu ", print_timer.sec);
+            //uart0_puts(buffer);
+            //sprintf(buffer, "min: %lu\n", print_timer.min);
+            //uart0_puts(buffer);
+            //_delay_ms(500);
+        if (print_timer.msec > 500){
+            //sysT_16_reset(&print_timer);
+        }
+            sprintf(buffer, "msec: %d ", sysT_16_get_msec(&print_timer));
             uart0_puts(buffer);
+            sprintf(buffer, "sec: %d ", sysT_16_get_sec(&print_timer));
+            uart0_puts(buffer);
+            sprintf(buffer, "min: %d\n", sysT_16_get_min(&print_timer));
+            uart0_puts(buffer);
+            //_delay_ms(500);
+        //}
         //    //unsigned char test = 0;
         //    //uart0_putc('c');
         //    //uint8_t i = 0;

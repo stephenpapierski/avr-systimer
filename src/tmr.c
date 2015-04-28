@@ -3,7 +3,7 @@
  * @file    tmr.c
  * @author  Stephen Papierski <stephenpapierski@gmail.com>
  * @date    2015-04-20 20:47:09
- * @edited  2015-04-25 15:19:41
+ * @edited  2015-04-27 23:56:02
  */
 
 #include <avr/io.h>
@@ -50,7 +50,12 @@ void update_timers8(void){
 
 /* 16 bit timer utils */
 
+void update_msec16(uint8_t index){
+    timers16[index] -> msec++;
+}
+
 void update_sec16(uint8_t index){
+    update_msec16(index);
     if ((timers16[index] -> msec) > 999){
         timers16[index] -> msec = 0;
         timers16[index] -> sec++;
@@ -84,8 +89,8 @@ void update_day16(uint8_t index){
 void update_timers16(void){
     uint8_t i;
     for (i = 0; i < MAX_16_TIMERS; i++){
-        if ((timers16[i] -> timer_scale) != 0){
-            timers16[i] -> msec++;
+        timers16[i] -> msec++;
+        if (timers16[i] -> timer_scale > 0){
             switch (timers16[i] -> timer_scale){
                 case MSEC:
                     break;
@@ -101,6 +106,8 @@ void update_timers16(void){
                 case DAY:
                     update_day16(i);
                     break;
+                default:
+                    break;
             }
         }
     }
@@ -109,10 +116,15 @@ void update_timers16(void){
 
 /* 32 bit timer utils */
 
+void update_msec32(uint8_t index){
+    timers32[index] -> msec++;
+}
+
 void update_sec32(uint8_t index){
+    update_msec32(index);
     if ((timers32[index] -> msec) > 999){
         (timers32[index] -> msec) = 0;
-      timers32[index] -> sec++;
+        timers32[index] -> sec++;
     }
 }
 
@@ -143,25 +155,26 @@ void update_day32(uint8_t index){
 void update_timers32(void){
     uint8_t i;
     for (i = 0; i < MAX_32_TIMERS; i++){
-        if ((timers32[i] -> timer_scale) != 0){
-            timers32[i] -> msec++;
-            switch (timers32[i] -> timer_scale){
-                case MSEC:
-                    break;
-                case SEC:
-                    update_sec32(i);
-                    break;
-                case MIN:
-                    update_min32(i);
-                    break;
-                case HOUR:
-                    update_hour32(i);
-                    break;
-                case DAY:
-                    update_day32(i);
-                    break;
-            }
-        }
+        timers32[i] -> msec++;
+        //switch (timers32[i] -> timer_scale){
+        //    case MSEC:
+        //        update_msec32(i);
+        //        break;
+        //    case SEC:
+        //        update_sec32(i);
+        //        break;
+        //    case MIN:
+        //        update_min32(i);
+        //        break;
+        //    case HOUR:
+        //        update_hour32(i);
+        //        break;
+        //    case DAY:
+        //        update_day32(i);
+        //        break;
+        //    default:
+        //        break;
+        //}
     }
 }
 
@@ -186,20 +199,23 @@ void sysT_init(void){
 #endif
 }
 
+/* 8 bit timer functions */
+
 void sysT_8_init(sysTimer8_t *timer){
     timers8[next_timer8] = timer;
+    timer -> active = true;
     next_timer8++;
 }
+
+void sysT_8_reset(sysTimer8_t *timer){
+    (timer -> msec) = 0;
+}
+
+/* 16 bit timer functions */
 
 void sysT_16_init(sysTimer16_t *timer, sysT_scale scale){
     timers16[next_timer16] = timer;
     next_timer16++;
-    timer -> timer_scale = scale;
-}
-
-void sysT_32_init(sysTimer32_t *timer, sysT_scale scale){
-    timers32[next_timer32] = timer;
-    next_timer32++;
     timer -> timer_scale = scale;
 }
 
@@ -210,6 +226,63 @@ void sysT_16_reset(sysTimer16_t *timer){
     (timer -> hour) = 0;
     (timer -> day) = 0;
 }
+
+uint16_t sysT_16_get_msec(sysTimer16_t *timer){
+    uint16_t ret;
+    cli();
+    ret = timer->msec;
+    sei();
+    return ret;
+}
+
+uint16_t sysT_16_get_sec(sysTimer16_t *timer){
+    uint16_t ret;
+    cli();
+    ret = timer->sec;
+    sei();
+    return ret;
+}
+
+uint16_t sysT_16_get_min(sysTimer16_t *timer){
+    uint16_t ret;
+    cli();
+    ret = timer->min;
+    sei();
+    return ret;
+}
+
+uint16_t sysT_16_get_hour(sysTimer16_t *timer){
+    uint16_t ret;
+    cli();
+    ret = timer->hour;
+    sei();
+    return ret;
+}
+
+uint16_t sysT_16_get_day(sysTimer16_t *timer){
+    uint16_t ret;
+    cli();
+    ret = timer->day;
+    sei();
+    return ret;
+}
+
+/* 32 bit timer functions */
+
+void sysT_32_init(sysTimer32_t *timer, sysT_scale scale){
+    timers32[next_timer32] = timer;
+    next_timer32++;
+    timer -> timer_scale = scale;
+}
+
+void sysT_32_reset(sysTimer32_t *timer){
+    (timer -> msec) = 0;
+    (timer -> sec) = 0;
+    (timer -> min) = 0;
+    (timer -> hour) = 0;
+    (timer -> day) = 0;
+}
+
 
 //counter_int tmr_get_count(char *timer_name){
 //    int8_t timer_index = get_timer_index(timer_name);

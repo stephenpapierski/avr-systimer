@@ -3,7 +3,7 @@
  * @file    tmr.h
  * @author  Stephen Papierski <stephenpapierski@gmail.com>
  * @date    2015-04-20 20:47:14
- * @edited  2015-04-28 00:00:18
+ * @edited  2015-04-28 00:02:40
  */
 
 #ifndef TMR_H
@@ -69,6 +69,11 @@ uint16_t sysT_16_get_day(sysTimer16_t *timer);
 /* 32 bit timer functions */
 void sysT_32_init(sysTimer32_t *timer, sysT_scale scale);
 void sysT_32_reset(sysTimer32_t *timer);
+uint32_t sysT_32_get_msec(sysTimer32_t *timer);
+uint32_t sysT_32_get_sec(sysTimer32_t *timer);
+uint32_t sysT_32_get_min(sysTimer32_t *timer);
+uint32_t sysT_32_get_hour(sysTimer32_t *timer);
+uint32_t sysT_32_get_day(sysTimer32_t *timer);
 
 ///**
 // * @brief Create new counter

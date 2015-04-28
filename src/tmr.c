@@ -3,7 +3,7 @@
  * @file    tmr.c
  * @author  Stephen Papierski <stephenpapierski@gmail.com>
  * @date    2015-04-20 20:47:09
- * @edited  2015-04-27 23:58:16
+ * @edited  2015-04-28 00:11:37
  */
 
 #include <avr/io.h>
@@ -156,25 +156,26 @@ void update_timers32(void){
     uint8_t i;
     for (i = 0; i < MAX_32_TIMERS; i++){
         timers32[i] -> msec++;
-        //switch (timers32[i] -> timer_scale){
-        //    case MSEC:
-        //        update_msec32(i);
-        //        break;
-        //    case SEC:
-        //        update_sec32(i);
-        //        break;
-        //    case MIN:
-        //        update_min32(i);
-        //        break;
-        //    case HOUR:
-        //        update_hour32(i);
-        //        break;
-        //    case DAY:
-        //        update_day32(i);
-        //        break;
-        //    default:
-        //        break;
-        //}
+        if (timers32[i] -> timer_scale > 0){
+            switch (timers32[i] -> timer_scale){
+                case MSEC:
+                    break;
+                case SEC:
+                    update_sec32(i);
+                    break;
+                case MIN:
+                    update_min32(i);
+                    break;
+                case HOUR:
+                    update_hour32(i);
+                    break;
+                case DAY:
+                    update_day32(i);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }
 
@@ -202,6 +203,7 @@ void sysT_init(void){
 /* 8 bit timer functions */
 
 void sysT_8_init(sysTimer8_t *timer){
+    sysT_8_reset(timer);
     timers8[next_timer8] = timer;
     timer -> active = true;
     next_timer8++;
@@ -222,6 +224,7 @@ uint8_t sysT_8_get_msec(sysTimer8_t *timer){
 /* 16 bit timer functions */
 
 void sysT_16_init(sysTimer16_t *timer, sysT_scale scale){
+    sysT_16_reset(timer);
     timers16[next_timer16] = timer;
     next_timer16++;
     timer -> timer_scale = scale;
@@ -278,6 +281,7 @@ uint16_t sysT_16_get_day(sysTimer16_t *timer){
 /* 32 bit timer functions */
 
 void sysT_32_init(sysTimer32_t *timer, sysT_scale scale){
+    sysT_32_reset(timer);
     timers32[next_timer32] = timer;
     next_timer32++;
     timer -> timer_scale = scale;
@@ -291,6 +295,45 @@ void sysT_32_reset(sysTimer32_t *timer){
     (timer -> day) = 0;
 }
 
+uint32_t sysT_32_get_msec(sysTimer32_t *timer){
+    uint32_t ret;
+    cli();
+    ret = timer->msec;
+    sei();
+    return ret;
+}
+
+uint32_t sysT_32_get_sec(sysTimer32_t *timer){
+    uint32_t ret;
+    cli();
+    ret = timer->sec;
+    sei();
+    return ret;
+}
+
+uint32_t sysT_32_get_min(sysTimer32_t *timer){
+    uint32_t ret;
+    cli();
+    ret = timer->min;
+    sei();
+    return ret;
+}
+
+uint32_t sysT_32_get_hour(sysTimer32_t *timer){
+    uint32_t ret;
+    cli();
+    ret = timer->hour;
+    sei();
+    return ret;
+}
+
+uint32_t sysT_32_get_day(sysTimer32_t *timer){
+    uint32_t ret;
+    cli();
+    ret = timer->day;
+    sei();
+    return ret;
+}
 
 //counter_int tmr_get_count(char *timer_name){
 //    int8_t timer_index = get_timer_index(timer_name);
